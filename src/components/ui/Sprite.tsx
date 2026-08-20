@@ -12,6 +12,8 @@ export interface SpriteProps {
   readonly draggable?: boolean;
   readonly style?: CSSProperties;
   readonly 'aria-hidden'?: boolean;
+  /** Riempie il contenitore invece di usare una dimensione fissa in px. */
+  readonly fill?: boolean;
 }
 
 /**
@@ -25,19 +27,22 @@ export const Sprite = memo<SpriteProps>(function Sprite({
   alt,
   draggable = false,
   style,
+  fill = false,
   'aria-hidden': ariaHidden,
 }) {
   return (
     <img
       src={spriteUrl(id)}
-      width={size}
-      height={size}
+      width={fill ? undefined : size}
+      height={fill ? undefined : size}
       alt={alt ?? id}
       aria-hidden={ariaHidden}
       draggable={draggable}
       loading="lazy"
-      className={`select-none object-contain [image-rendering:pixelated] ${className}`}
-      style={{ width: size, height: size, ...style }}
+      className={`select-none object-contain [image-rendering:pixelated] ${
+        fill ? 'h-full w-full' : ''
+      } ${className}`}
+      style={fill ? style : { width: size, height: size, ...style }}
     />
   );
 });

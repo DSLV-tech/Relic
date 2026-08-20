@@ -16,7 +16,12 @@ const PHASE_COPY: Readonly<Record<string, string>> = {
   perquisizione: 'Sta per entrare. Rallenta il ritmo.',
 };
 
-export const InspectorMeter = (): JSX.Element => {
+export interface InspectorMeterProps {
+  /** Variante compatta per la barra di stato inferiore su mobile. */
+  readonly slim?: boolean;
+}
+
+export const InspectorMeter = ({ slim = false }: InspectorMeterProps): JSX.Element => {
   const inspector = useInspector();
   const hideArtifacts = useGameStore((state) => state.hideArtifacts);
   const [remaining, setRemaining] = useState(HIDE_WINDOW_MS);
@@ -49,30 +54,57 @@ export const InspectorMeter = (): JSX.Element => {
 
   return (
     <>
-      <div className="flex items-center gap-3 rounded-lg border border-stone-800 bg-stone-900/60 px-3 py-2">
-        <Sprite
-          id="ispettore"
-          size={32}
-          className={inspector.pressure >= PRESSURE_VISIT ? 'animate-pulse' : ''}
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between">
-            <span className="text-[10px] uppercase tracking-widest text-stone-500">Pressione</span>
-            <span className="font-mono text-[11px] text-stone-400 tabular-nums">
-              {formatPercent(inspector.pressure)}
-            </span>
+      {slim ? (
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <Sprite
+            id="ispettore"
+            size={20}
+            className={`shrink-0 ${inspector.pressure >= PRESSURE_VISIT ? 'animate-pulse' : ''}`}
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[9px] uppercase tracking-wider text-stone-500">Pressione</span>
+              <span className="truncate text-[9px] text-stone-600">
+                {PHASE_COPY[inspector.phase]}
+              </span>
+              <span className="shrink-0 font-mono text-[10px] text-stone-400 tabular-nums">
+                {formatPercent(inspector.pressure)}
+              </span>
+            </div>
+            <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-stone-800">
+              <div
+                className={`h-full bg-gradient-to-r transition-[width] duration-200 ${tone}`}
+                style={{ width: `${inspector.pressure * 100}%` }}
+              />
+            </div>
           </div>
-          <div className="mt-1 h-2 overflow-hidden rounded bg-stone-800">
-            <div
-              className={`h-full bg-gradient-to-r transition-[width] duration-200 ${tone}`}
-              style={{ width: `${inspector.pressure * 100}%` }}
-            />
-          </div>
-          <p className="mt-1 truncate text-[10px] text-stone-600">
-            {PHASE_COPY[inspector.phase]} · {inspector.visitsSurvived} visite superate
-          </p>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center gap-3 rounded-lg border border-stone-800 bg-stone-900/60 px-3 py-2">
+          <Sprite
+            id="ispettore"
+            size={32}
+            className={inspector.pressure >= PRESSURE_VISIT ? 'animate-pulse' : ''}
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between">
+              <span className="text-[10px] uppercase tracking-widest text-stone-500">Pressione</span>
+              <span className="font-mono text-[11px] text-stone-400 tabular-nums">
+                {formatPercent(inspector.pressure)}
+              </span>
+            </div>
+            <div className="mt-1 h-2 overflow-hidden rounded bg-stone-800">
+              <div
+                className={`h-full bg-gradient-to-r transition-[width] duration-200 ${tone}`}
+                style={{ width: `${inspector.pressure * 100}%` }}
+              />
+            </div>
+            <p className="mt-1 truncate text-[10px] text-stone-600">
+              {PHASE_COPY[inspector.phase]} · {inspector.visitsSurvived} visite superate
+            </p>
+          </div>
+        </div>
+      )}
 
       <Modal
         open={inspector.hiding}

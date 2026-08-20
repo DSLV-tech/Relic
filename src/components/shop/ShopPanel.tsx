@@ -45,12 +45,14 @@ export const ShopPanel = (): JSX.Element => {
   );
 
   return (
-    <section className="flex h-full min-h-0 flex-col gap-3">
-      <header className="flex items-center gap-3 border-b border-stone-800 pb-3">
-        <Sprite id="aria" size={44} />
-        <div className="flex-1">
-          <h2 className="text-sm font-semibold tracking-wide text-teal-200">Terminale di A.R.I.A.</h2>
-          <p className="text-[11px] text-stone-500">Potenziamenti e automazione</p>
+    <section className="flex flex-col gap-3 lg:h-full lg:min-h-0">
+      <header className="flex items-center gap-2 border-b border-stone-800 pb-2 sm:gap-3 sm:pb-3">
+        <Sprite id="aria" size={30} className="shrink-0 sm:h-11 sm:w-11" />
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-[13px] font-semibold tracking-wide text-teal-200 sm:overflow-visible sm:whitespace-normal sm:text-sm">
+            Terminale di A.R.I.A.
+          </h2>
+          <p className="hidden text-[11px] text-stone-500 sm:block">Potenziamenti e automazione</p>
         </div>
         <div className="flex overflow-hidden rounded border border-stone-700">
           {BULK_OPTIONS.map((option) => (
@@ -68,7 +70,7 @@ export const ShopPanel = (): JSX.Element => {
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+      <div className="flex flex-col gap-2 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
         {visible.map((definition) => (
           <UpgradeCard
             key={definition.id}

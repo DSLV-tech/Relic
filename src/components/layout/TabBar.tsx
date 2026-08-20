@@ -40,7 +40,12 @@ export const TabBar = memo<TabBarProps>(function TabBar({
   return (
     <nav
       aria-label="Sezioni"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-800 bg-stone-950/95 backdrop-blur lg:hidden"
+      /*
+       * Elemento normale del flusso, non `fixed`: lo shell mobile è già alto
+       * esattamente un viewport, e da fissa si sovrapponeva alla barra di stato
+       * invece di riservarle spazio.
+       */
+      className="shrink-0 border-t border-stone-800 bg-stone-950/95 backdrop-blur lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <ul className="mx-auto flex max-w-md">
@@ -54,7 +59,7 @@ export const TabBar = memo<TabBarProps>(function TabBar({
                 onClick={() => onChange(tab.id)}
                 aria-current={isActive ? 'page' : undefined}
                 className={[
-                  'relative flex h-16 w-full flex-col items-center justify-center gap-0.5 transition',
+                  'relative flex h-14 w-full flex-col items-center justify-center gap-0.5 transition sm:h-16',
                   isActive ? 'text-amber-200' : wanted ? 'text-teal-300' : 'text-stone-600',
                 ].join(' ')}
               >

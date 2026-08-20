@@ -9,6 +9,7 @@ import { LoreLog } from '../narrative/LoreLog';
 import { HelpModal } from '../onboarding/HelpModal';
 import { IntroScreen } from '../onboarding/IntroScreen';
 import { QuestTracker } from '../onboarding/QuestTracker';
+import { PrestigeCallout } from '../prestige/PrestigeCallout';
 import { PrestigePanel } from '../prestige/PrestigePanel';
 import { ShopPanel } from '../shop/ShopPanel';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
@@ -61,7 +62,9 @@ const TabPane = ({
   readonly children: ReactNode;
   readonly className?: string;
 }): JSX.Element => (
-  <div className={`${tab === active ? 'flex' : 'hidden'} flex-col gap-4 lg:flex ${className}`}>
+  <div
+    className={`${tab === active ? 'flex' : 'hidden'} min-h-0 flex-col gap-3 sm:gap-4 lg:flex ${className}`}
+  >
     {children}
   </div>
 );
@@ -79,28 +82,30 @@ export const AppShell = (): JSX.Element => {
   if (!introSeen) return <IntroScreen />;
 
   return (
-    <div className="min-h-[100dvh] bg-stone-950 bg-[radial-gradient(ellipse_at_top,rgba(120,80,30,0.16),transparent_65%)] text-stone-200">
-      <div
-        className="mx-auto flex max-w-7xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-5"
-        style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}
-      >
-        <header className="flex items-center gap-3">
-          <Sprite id="orologio_eternita" size={36} className="sm:h-11 sm:w-11" />
-          <div className="mr-auto min-w-0">
-            <h1 className="truncate text-base font-bold tracking-wide text-amber-200 sm:text-lg">
-              Relic Loop{' '}
-              <span className="hidden font-normal text-stone-500 sm:inline">
-                — La Bottega del Tempo
-              </span>
-            </h1>
-            <p className="text-[10px] text-stone-600 sm:text-[11px]">prototipo v0.3</p>
-          </div>
+    /**
+     * Su mobile l'app è alta esattamente quanto il viewport e non scrolla: le
+     * sezioni che hanno bisogno di scorrere lo fanno internamente. È l'unico
+     * modo per garantire che il pulsante di tap e la barra di progresso siano
+     * sempre entrambi visibili, su qualsiasi telefono.
+     */
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-stone-950 bg-[radial-gradient(ellipse_at_top,rgba(120,80,30,0.16),transparent_65%)] text-stone-200 lg:h-auto lg:min-h-screen lg:overflow-visible">
+      {/* ── Barre superiori: costo fisso, tenuto al minimo ── */}
+      <div className="relative z-20 shrink-0 border-b border-stone-900/80 bg-stone-950/80 px-3 pb-2 pt-2 backdrop-blur sm:px-4 lg:mx-auto lg:w-full lg:max-w-7xl lg:border-0 lg:bg-transparent lg:pt-5 lg:backdrop-blur-none">
+        <header className="flex items-center gap-2 pb-2">
+          <Sprite id="orologio_eternita" size={26} className="shrink-0 sm:h-10 sm:w-10" />
+          <h1 className="mr-auto truncate text-sm font-bold tracking-wide text-amber-200 sm:text-lg">
+            Relic Loop
+            <span className="hidden font-normal text-stone-500 sm:inline">
+              {' '}
+              — La Bottega del Tempo
+            </span>
+          </h1>
           <button
             type="button"
             onClick={toggleMute}
             aria-label={muted ? 'Attiva l’audio' : 'Disattiva l’audio'}
             aria-pressed={muted}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-stone-700 text-sm text-stone-400 transition hover:border-amber-700/70 hover:text-amber-300"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-stone-700 text-xs text-stone-400 transition active:bg-stone-800 sm:h-9 sm:w-9 sm:text-sm"
           >
             {muted ? '🔇' : '🔊'}
           </button>
@@ -108,77 +113,102 @@ export const AppShell = (): JSX.Element => {
             type="button"
             onClick={() => setHelpOpen(true)}
             aria-label="Come si gioca"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-stone-700 text-sm font-semibold text-stone-400 transition hover:border-amber-700/70 hover:text-amber-300"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-stone-700 text-xs font-semibold text-stone-400 transition active:bg-stone-800 sm:h-9 sm:w-9 sm:text-sm"
           >
             ?
           </button>
         </header>
 
-        <ResourceHud onExplain={() => setHelpOpen(true)} />
+        <div className="flex flex-col gap-2">
+          <ResourceHud onExplain={() => setHelpOpen(true)} />
+          <ErrorBoundary>
+            <QuestTracker onGoToTarget={goToTarget} currentTab={tab} />
+          </ErrorBoundary>
+        </div>
 
-        <ErrorBoundary>
-          <QuestTracker onGoToTarget={goToTarget} currentTab={tab} />
-        </ErrorBoundary>
+        {/* I toast scendono da qui invece di coprire il pulsante di tap. */}
+        <ToastStack />
+      </div>
 
-        <main className="grid gap-3 sm:gap-4 lg:grid-cols-[300px_minmax(0,1fr)_320px]">
-          {/*
-            Ordine DOM = ordine mobile: il banco di lavoro deve stare sopra la
-            piega, altrimenti il gesto principale del gioco richiede uno scroll.
-            Su desktop le colonne tornano al loro posto con col-start/row-start.
-          */}
-          <TabPane tab="banco" active={tab} className="lg:col-start-2 lg:row-start-1">
-            <Panel className="flex-1" highlighted={questTarget === 'banco'}>
-              <ErrorBoundary>
-                <Suspense fallback={<Loading label="Preparo il banco…" />}>
-                  <Workbench />
-                </Suspense>
-              </ErrorBoundary>
-            </Panel>
+      {/* ── Area di gioco ── */}
+      <main className="min-h-0 flex-1 px-3 py-2 sm:px-4 lg:mx-auto lg:grid lg:w-full lg:max-w-7xl lg:grid-cols-[300px_minmax(0,1fr)_320px] lg:gap-4 lg:py-4">
+        <TabPane tab="banco" active={tab} className="h-full lg:col-start-2 lg:row-start-1">
+          <Panel
+            className="flex min-h-0 flex-1 flex-col lg:h-[520px] lg:flex-none"
+            highlighted={questTarget === 'banco'}
+          >
+            <ErrorBoundary>
+              <Suspense fallback={<Loading label="Preparo il banco…" />}>
+                <Workbench />
+              </Suspense>
+            </ErrorBoundary>
+          </Panel>
+          {/* Su desktop c'è spazio: pressione e prestigio restano in colonna. */}
+          <div className="hidden lg:flex lg:flex-col lg:gap-4">
             <InspectorMeter />
             <ErrorBoundary>
               <PrestigePanel />
             </ErrorBoundary>
+          </div>
+        </TabPane>
+
+        <div className="contents lg:col-start-1 lg:row-start-1 lg:flex lg:flex-col lg:gap-4">
+          <TabPane tab="mercato" active={tab} className="h-full overflow-y-auto lg:h-auto">
+            <Panel highlighted={questTarget === 'mercato'}>
+              <ErrorBoundary>
+                <Suspense fallback={<Loading label="Il Mercante apre la bottega…" />}>
+                  <CrateOpener />
+                </Suspense>
+              </ErrorBoundary>
+            </Panel>
+            <Panel className="lg:hidden">
+              <ErrorBoundary>
+                <InventoryGrid />
+              </ErrorBoundary>
+            </Panel>
+          </TabPane>
+          <div className="hidden lg:block">
+            <Panel>
+              <ErrorBoundary>
+                <InventoryGrid />
+              </ErrorBoundary>
+            </Panel>
+          </div>
+        </div>
+
+        <div className="contents lg:col-start-3 lg:row-start-1 lg:flex lg:flex-col lg:gap-4">
+          <TabPane tab="bottega" active={tab} className="h-full overflow-y-auto lg:h-auto">
+            <Panel
+              className="lg:flex lg:max-h-[58vh] lg:min-h-0 lg:flex-col"
+              highlighted={questTarget === 'bottega'}
+            >
+              <ErrorBoundary>
+                <ShopPanel />
+              </ErrorBoundary>
+            </Panel>
+            {/* Il Salto Temporale vive qui: è una decisione di progressione,
+                non un'azione da avere sotto il pollice mentre si tocca. */}
+            <div className="lg:hidden">
+              <ErrorBoundary>
+                <PrestigePanel />
+              </ErrorBoundary>
+            </div>
           </TabPane>
 
-          <div className="flex flex-col gap-3 sm:gap-4 lg:col-start-1 lg:row-start-1">
-            <TabPane tab="banco" active={tab}>
-              <Panel>
-                <ErrorBoundary>
-                  <InventoryGrid />
-                </ErrorBoundary>
-              </Panel>
-            </TabPane>
-            <TabPane tab="mercato" active={tab}>
-              <Panel highlighted={questTarget === 'mercato'}>
-                <ErrorBoundary>
-                  <Suspense fallback={<Loading label="Il Mercante apre la bottega…" />}>
-                    <CrateOpener />
-                  </Suspense>
-                </ErrorBoundary>
-              </Panel>
-            </TabPane>
-          </div>
+          <TabPane tab="archivio" active={tab} className="h-full overflow-y-auto lg:h-auto">
+            <Panel highlighted={questTarget === 'archivio'}>
+              <ErrorBoundary>
+                <LoreLog />
+              </ErrorBoundary>
+            </Panel>
+          </TabPane>
+        </div>
+      </main>
 
-          <div className="flex flex-col gap-3 sm:gap-4 lg:col-start-3 lg:row-start-1">
-            <TabPane tab="bottega" active={tab}>
-              <Panel
-                className="flex max-h-[68vh] min-h-0 flex-col lg:max-h-[58vh]"
-                highlighted={questTarget === 'bottega'}
-              >
-                <ErrorBoundary>
-                  <ShopPanel />
-                </ErrorBoundary>
-              </Panel>
-            </TabPane>
-            <TabPane tab="archivio" active={tab}>
-              <Panel highlighted={questTarget === 'archivio'}>
-                <ErrorBoundary>
-                  <LoreLog />
-                </ErrorBoundary>
-              </Panel>
-            </TabPane>
-          </div>
-        </main>
+      {/* ── Barra di stato: sempre visibile, costa 34 px ── */}
+      <div className="flex shrink-0 items-center gap-2 border-t border-stone-900 bg-stone-950/90 px-3 py-1.5 backdrop-blur lg:hidden">
+        <InspectorMeter slim />
+        <PrestigeCallout onOpen={() => setTab('bottega')} />
       </div>
 
       <TabBar
@@ -189,7 +219,6 @@ export const AppShell = (): JSX.Element => {
       />
       <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
       <OfflineReportModal />
-      <ToastStack />
     </div>
   );
 };

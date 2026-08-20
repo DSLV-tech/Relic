@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 
 import { formatNumber } from '../../lib/format';
 import { useCurrentQuest } from '../../store/selectors';
@@ -20,21 +20,24 @@ export interface QuestTrackerProps {
 
 /**
  * La riga più importante dell'interfaccia: dice sempre cosa fare adesso.
- * Sostituisce il tutorial a modali — non si chiude, non si dimentica, e resta
- * utile anche dopo le prime ore.
+ *
+ * Su mobile sta su UNA riga — il "perché" si apre toccandola. Nella v0.3
+ * occupava 100 px fissi di uno schermo da 667, cioè il 15% dello spazio, per
+ * un testo che dopo il primo minuto il giocatore non rilegge più.
  */
 export const QuestTracker = memo<QuestTrackerProps>(function QuestTracker({
   onGoToTarget,
   currentTab,
 }) {
   const { quest, current, goal, index, total } = useCurrentQuest();
+  const [expanded, setExpanded] = useState(false);
 
   if (!quest) {
     return (
-      <div className="flex items-center gap-2.5 rounded-lg border border-stone-800 bg-stone-900/50 px-3 py-2">
-        <Sprite id="aria" size={26} />
-        <p className="text-[11px] text-stone-500">
-          Hai completato tutti gli obiettivi guidati. Da qui in poi decidi tu.
+      <div className="flex items-center gap-2 rounded-lg border border-stone-800 bg-stone-900/50 px-2.5 py-1.5">
+        <Sprite id="aria" size={20} />
+        <p className="truncate text-[11px] text-stone-500">
+          Obiettivi guidati completati. Da qui decidi tu.
         </p>
       </div>
     );
@@ -44,42 +47,55 @@ export const QuestTracker = memo<QuestTrackerProps>(function QuestTracker({
   const elsewhere = quest.target !== currentTab;
 
   return (
-    <button
-      type="button"
-      onClick={() => onGoToTarget(quest.target)}
-      className="w-full rounded-lg border border-teal-800/60 bg-gradient-to-r from-teal-950/70 to-stone-900/70 px-3 py-2.5 text-left transition active:scale-[0.99] hover:border-teal-600/70"
-    >
-      <div className="flex items-start gap-2.5">
-        <Sprite id="aria" size={30} className="mt-0.5 shrink-0" />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-2">
-            <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-teal-500">
-              Obiettivo {index + 1}/{total}
-            </span>
-            {elsewhere && (
-              <span className="rounded bg-teal-900/60 px-1.5 py-px text-[9px] font-medium text-teal-300">
-                vai in {TARGET_LABEL[quest.target]} →
-              </span>
-            )}
-          </div>
-          <p className="text-sm font-semibold leading-snug text-amber-100">{quest.title}</p>
-          <p className="mt-0.5 text-[11px] leading-snug text-stone-400">{quest.hint}</p>
+    <div className="overflow-hidden rounded-lg border border-teal-800/60 bg-gradient-to-r from-teal-950/70 to-stone-900/70">
+      <button
+        type="button"
+        onClick={() => (elsewhere ? onGoToTarget(quest.target) : setExpanded((v) => !v))}
+        aria-expanded={expanded}
+        className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left transition active:bg-teal-900/20"
+      >
+        <Sprite id="aria" size={22} className="shrink-0" />
 
+        <span className="min-w-0 flex-1">
+          <span className="flex items-baseline gap-1.5">
+            <span className="shrink-0 font-mono text-[9px] text-teal-500">
+              {index + 1}/{total}
+            </span>
+            <span className="truncate text-[13px] font-semibold leading-tight text-amber-100">
+              {quest.title}
+            </span>
+          </span>
           {goal > 1 && (
-            <div className="mt-1.5 flex items-center gap-2">
-              <div className="h-1.5 flex-1 overflow-hidden rounded bg-stone-800">
-                <div
-                  className="h-full bg-gradient-to-r from-teal-600 to-teal-300 transition-[width] duration-200"
+            <span className="mt-1 flex items-center gap-1.5">
+              <span className="h-1 flex-1 overflow-hidden rounded-full bg-stone-800">
+                <span
+                  className="block h-full bg-gradient-to-r from-teal-600 to-teal-300 transition-[width] duration-200"
                   style={{ width: `${ratio * 100}%` }}
                 />
-              </div>
-              <span className="shrink-0 font-mono text-[10px] text-stone-500 tabular-nums">
+              </span>
+              <span className="shrink-0 font-mono text-[9px] text-stone-500 tabular-nums">
                 {formatNumber(current)}/{formatNumber(goal)}
               </span>
-            </div>
+            </span>
           )}
-        </div>
-      </div>
-    </button>
+        </span>
+
+        <span
+          className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-medium ${
+            elsewhere ? 'bg-teal-900/60 text-teal-300' : 'text-stone-600'
+          }`}
+        >
+          {elsewhere ? `${TARGET_LABEL[quest.target]} →` : expanded ? 'chiudi ⌃' : 'perché? ⌄'}
+        </span>
+      </button>
+
+      {/* Il "perché" resta a un tocco di distanza invece che sempre a schermo. */}
+      {expanded && !elsewhere && (
+        <p className="border-t border-teal-900/40 px-2.5 py-2 text-[11px] leading-snug text-stone-400">
+          {quest.hint}
+          <span className="mt-1 block italic text-teal-500/80">«{quest.aria}»</span>
+        </p>
+      )}
+    </div>
   );
 });

@@ -7,6 +7,7 @@ import { useSound } from '../../hooks/useSound';
 import { formatNumber } from '../../lib/format';
 import { useGameStore } from '../../store/gameStore';
 import { useActiveRelic, useDerived, useResource } from '../../store/selectors';
+import { InventoryStrip } from '../inventory/InventoryStrip';
 import { Sprite } from '../ui/Sprite';
 import { BurstParticles, type Burst } from './BurstParticles';
 import { ComboMeter } from './ComboMeter';
@@ -130,24 +131,31 @@ export const Workbench = (): JSX.Element => {
 
   return (
     <section
-      className={`flex h-full flex-col items-center justify-center gap-3 sm:gap-5 sm:py-2 ${
+      className={`flex h-full min-h-0 flex-col items-center gap-1.5 ${
         shake ? 'animate-shake' : ''
       }`}
     >
-      <header className="text-center">
-        <p className={`text-[11px] uppercase tracking-[0.2em] ${rarity.tone.split(' ')[0]}`}>
+      {/* Intestazione su una riga: rarità e nome bastano, il resto è dettaglio. */}
+      <header className="flex w-full shrink-0 items-baseline justify-center gap-2 text-center">
+        <span className={`text-[10px] uppercase tracking-[0.18em] ${rarity.tone.split(' ')[0]}`}>
           {rarity.label}
-        </p>
-        <h2 className="text-base font-semibold text-amber-100 sm:text-lg">
+        </span>
+        <h2 className="truncate text-[15px] font-semibold text-amber-100 sm:text-lg">
           {showRestoredName ? definition.restoredName : definition.name}
         </h2>
-        <p className="text-xs text-stone-500">
-          restaurata {instance.restoreCount}× · {definition.dustPerTap} polvere per tap
-        </p>
+        <span className="shrink-0 font-mono text-[10px] text-stone-600 tabular-nums">
+          ×{instance.restoreCount}
+        </span>
       </header>
 
       <ComboMeter />
 
+      {/*
+        Il pulsante prende ESATTAMENTE lo spazio che avanza fra intestazione e
+        controlli, invece di una frazione del viewport: con `34vh` su un iPhone
+        SE spingeva inventario e barra Pressione fuori dallo schermo.
+      */}
+      <div className="flex min-h-0 w-full flex-1 items-center justify-center [&>button]:max-h-[260px]">
       <button
         type="button"
         onPointerDown={handleTap}
@@ -155,8 +163,8 @@ export const Workbench = (): JSX.Element => {
         disabled={!canTap}
         aria-label={`Restaura ${definition.name}`}
         className={[
-          'relative grid h-52 w-52 touch-manipulation select-none place-items-center rounded-2xl border',
-          'transition-transform duration-75 sm:h-56 sm:w-56',
+          'relative grid aspect-square h-full max-h-full w-auto max-w-full touch-manipulation',
+          'select-none place-items-center rounded-2xl border transition-transform duration-75',
           'border-stone-800 bg-gradient-to-b from-stone-900 to-stone-950',
           canTap ? 'cursor-pointer hover:border-amber-800/70' : 'cursor-not-allowed opacity-60',
           canTap && idle ? 'animate-invite border-amber-700/70' : '',
@@ -164,16 +172,12 @@ export const Workbench = (): JSX.Element => {
           rarity.glow,
         ].join(' ')}
       >
-        <div className="relative grid place-items-center">
-          <Sprite
-            id={definition.spriteBroken}
-            size={160}
-            className={punch ? 'brightness-150' : ''}
-          />
+        <div className="relative grid h-[72%] w-[72%] place-items-center">
+          <Sprite id={definition.spriteBroken} fill className={punch ? 'brightness-150' : ''} />
           {/* Lo stato restaurato affiora man mano che la barra si riempie. */}
           <Sprite
             id={definition.spriteRestored}
-            size={160}
+            fill
             className={`pointer-events-none absolute inset-0 transition-opacity duration-150 ${
               punch ? 'brightness-150' : ''
             }`}
@@ -188,7 +192,7 @@ export const Workbench = (): JSX.Element => {
         {/* L'invito sparisce appena il giocatore capisce, e torna se si ferma. */}
         <span
           className={[
-            'pointer-events-none absolute inset-x-0 bottom-3 text-center text-[11px]',
+            'pointer-events-none absolute inset-x-0 bottom-2 text-center text-[10px]',
             'font-semibold uppercase tracking-[0.18em] transition-opacity duration-300',
             canTap && idle ? 'text-amber-300/90 opacity-100' : 'opacity-0',
           ].join(' ')}
@@ -196,14 +200,24 @@ export const Workbench = (): JSX.Element => {
           tocca per restaurare
         </span>
       </button>
+      </div>
 
-      <RestoreBar progress={progress} />
+      <div className="flex w-full shrink-0 flex-col items-center gap-1.5">
+        <RestoreBar progress={progress} />
 
-      {!canTap && (
-        <p className="text-xs text-amber-500/80">
-          Polvere esaurita — si rigenera a {derived.dustPerSecond.toFixed(1)}/s
-        </p>
-      )}
+        {!canTap ? (
+          <p className="text-[11px] text-amber-500/80">
+            Polvere esaurita — si rigenera a {derived.dustPerSecond.toFixed(1)}/s
+          </p>
+        ) : (
+          <p className="text-[10px] text-stone-600">
+            {definition.dustPerTap} polvere per tocco
+          </p>
+        )}
+
+        {/* Cambiare reliquia deve costare un tocco, non uno scroll. */}
+        <InventoryStrip />
+      </div>
     </section>
   );
 };

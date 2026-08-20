@@ -24,21 +24,33 @@ const ToastCard = ({ toast }: { readonly toast: Toast }): JSX.Element => {
     <button
       type="button"
       onClick={() => dismiss(toast.id)}
-      className={`flex w-full max-w-xs animate-slide-in items-center gap-2.5 rounded-lg border px-3 py-2 text-left shadow-xl backdrop-blur ${TONE[toast.kind]}`}
+      className={`ml-auto flex w-auto max-w-full animate-slide-in items-center gap-2 rounded-lg border px-2.5 py-1 text-left shadow-xl backdrop-blur lg:ml-0 lg:w-full lg:max-w-xs lg:px-3 lg:py-2 ${TONE[toast.kind]}`}
     >
-      {toast.sprite && <Sprite id={toast.sprite} size={32} />}
-      <div className="min-w-0">
-        <p className="truncate text-xs font-medium text-amber-100">{toast.title}</p>
-        {toast.body && <p className="truncate text-[11px] text-stone-400">{toast.body}</p>}
+      {toast.sprite && <Sprite id={toast.sprite} size={20} className="shrink-0 lg:h-8 lg:w-8" />}
+      {/* Su mobile titolo e dettaglio stanno sulla stessa riga: una notifica
+          alta due righe copriva metà del banco di lavoro. */}
+      <div className="flex min-w-0 items-baseline gap-1.5 lg:block">
+        <p className="truncate text-[11px] font-medium text-amber-100 lg:text-xs">{toast.title}</p>
+        {toast.body && (
+          <p className="truncate text-[10px] text-stone-400 lg:text-[11px]">
+            <span className="lg:hidden">· </span>
+            {toast.body}
+          </p>
+        )}
       </div>
     </button>
   );
 };
 
+/**
+ * Su mobile le notifiche scendono da sotto le barre superiori: prima stavano
+ * in basso a destra e coprivano esattamente il pulsante di tap e la scritta
+ * che invita a premerlo. Su schermo stretto ne resta visibile una sola.
+ */
 export const ToastStack = (): JSX.Element => {
   const toasts = useToasts();
   return (
-    <div className="pointer-events-none fixed inset-x-3 bottom-[4.75rem] z-40 flex flex-col-reverse items-end gap-2 lg:inset-x-auto lg:bottom-4 lg:right-4">
+    <div className="pointer-events-none absolute inset-x-3 top-full z-40 flex flex-col gap-1 pt-1 [&>*:nth-child(n+2)]:hidden sm:px-0 lg:fixed lg:inset-x-auto lg:bottom-4 lg:right-4 lg:top-auto lg:flex-col-reverse lg:gap-2 lg:pt-0 lg:[&>*:nth-child(n+2)]:block">
       {toasts.map((toast) => (
         <div key={toast.id} className="pointer-events-auto">
           <ToastCard toast={toast} />

@@ -167,10 +167,39 @@ fuori dal fuoco visivo — ricordi, obiettivi, Ispettore — e due uguali di fil
 
 ## Mobile
 
-Il layout è a tab con barra in fondo sotto `lg`, tre colonne sopra — stessa base di
-codice, nessun media query in JavaScript (quindi nessun flash al primo render). Il
-banco di lavoro è sempre sopra la piega: il gesto principale non deve mai richiedere
-uno scroll.
+**Lo shell mobile è alto esattamente un viewport (`100dvh`) e non scrolla.** È una
+griglia flex a cinque fasce: barre superiori, area di gioco elastica, barra di stato,
+tab bar. Le sezioni che hanno bisogno di scorrere lo fanno internamente. Prima la
+pagina era alta 1155 px su un iPhone SE da 667: la barra di progresso — il feedback
+principale del gioco — restava fuori schermo.
+
+Conseguenze pratiche di quella scelta:
+
+- **Il pulsante di tap si dimensiona sullo spazio che avanza** (`flex-1` +
+  `aspect-square`), non su una frazione del viewport. Con `34vh` su schermi corti
+  spingeva inventario e barra Pressione oltre il bordo.
+- **La tab bar non è `fixed`.** Da fissa non riservava spazio nel flusso e la barra di
+  stato ci finiva sotto.
+- **L'inventario è una striscia orizzontale sotto la barra di progresso.** Da griglia
+  in un pannello separato stava sotto la piega, quindi in pratica nessuno cambiava
+  reliquia.
+- **Il Salto Temporale è nel tab A.R.I.A.**, non nel Banco: è una decisione di
+  progressione, non un gesto da avere sotto il pollice. Quando è disponibile compare
+  un richiamo compatto nella barra di stato.
+- **I toast scendono da sotto le barre superiori**, non dal basso: lì coprivano
+  esattamente il pulsante e la scritta che invita a premerlo. Su schermo stretto ne
+  resta visibile uno solo, su una riga.
+- **L'obiettivo sta su una riga**, con il "perché" a un tocco di distanza: prima
+  occupava 100 px fissi per un testo che dopo il primo minuto non si rilegge.
+
+Il tap usa `pointerdown` invece di `click` (su mobile il click arriva ~80 ms dopo il
+rilascio e in un clicker si sente come lag), con `touch-action: manipulation`,
+`-webkit-tap-highlight-color: transparent` e `overscroll-behavior-y: none`. Feedback
+aptico via `navigator.vibrate`, che su iOS degrada in un no-op silenzioso.
+
+Da `lg` in su lo shell torna a scorrere normalmente e le tre colonne si affiancano:
+stessa base di codice, nessun media query in JavaScript e quindi nessun flash al primo
+render.
 
 Il tap usa `pointerdown` invece di `click` (su mobile il click arriva ~80 ms dopo il
 rilascio e in un clicker si sente come lag), con `touch-action: manipulation`,
