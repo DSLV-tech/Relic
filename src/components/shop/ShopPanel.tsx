@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { UPGRADES } from '../../data/upgrades';
+import { useSound } from '../../hooks/useSound';
 import { useGameStore } from '../../store/gameStore';
 import { Sprite } from '../ui/Sprite';
 import { UpgradeCard } from './UpgradeCard';
@@ -11,6 +12,7 @@ type BulkOption = (typeof BULK_OPTIONS)[number];
 
 export const ShopPanel = (): JSX.Element => {
   const [bulk, setBulk] = useState<BulkOption>(1);
+  const play = useSound();
 
   const { upgrades, essenza, monete, totalEssenceEarned, buyUpgrade } = useGameStore(
     useShallow((state) => ({
@@ -35,8 +37,11 @@ export const ShopPanel = (): JSX.Element => {
   );
 
   const handleBuy = useCallback(
-    (id: string, count: number) => buyUpgrade(id, count),
-    [buyUpgrade],
+    (id: string, count: number) => {
+      buyUpgrade(id, count);
+      play('purchase');
+    },
+    [buyUpgrade, play],
   );
 
   return (

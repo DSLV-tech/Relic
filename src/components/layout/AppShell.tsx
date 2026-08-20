@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useState, type ReactNode } from 'react';
 
+import { useMuteToggle } from '../../hooks/useSound';
 import { useIntroSeen, useQuestTarget, useUnlockedLore } from '../../store/selectors';
 import type { QuestTarget } from '../../types/game';
 import { InventoryGrid } from '../inventory/InventoryGrid';
@@ -71,6 +72,7 @@ export const AppShell = (): JSX.Element => {
   const introSeen = useIntroSeen();
   const questTarget = useQuestTarget();
   const unlockedLore = useUnlockedLore();
+  const [muted, toggleMute] = useMuteToggle();
 
   const goToTarget = useCallback((target: QuestTarget) => setTab(target), []);
 
@@ -91,8 +93,17 @@ export const AppShell = (): JSX.Element => {
                 — La Bottega del Tempo
               </span>
             </h1>
-            <p className="text-[10px] text-stone-600 sm:text-[11px]">prototipo v0.2</p>
+            <p className="text-[10px] text-stone-600 sm:text-[11px]">prototipo v0.3</p>
           </div>
+          <button
+            type="button"
+            onClick={toggleMute}
+            aria-label={muted ? 'Attiva l’audio' : 'Disattiva l’audio'}
+            aria-pressed={muted}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-stone-700 text-sm text-stone-400 transition hover:border-amber-700/70 hover:text-amber-300"
+          >
+            {muted ? '🔇' : '🔊'}
+          </button>
           <button
             type="button"
             onClick={() => setHelpOpen(true)}

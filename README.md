@@ -94,6 +94,25 @@ di lavoro continua a funzionare e non perdi la sessione.
 **`image-rendering: pixelated` ovunque.** Senza, il browser interpola i PNG 4x e la
 pixel art diventa una macchia.
 
+## Pubblicare su GitHub Pages
+
+Il deploy è automatico: ogni push su `main` ricostruisce e pubblica.
+
+**Una tantum, su GitHub:** *Settings → Pages → Build and deployment → Source:*
+**GitHub Actions** (non "Deploy from a branch"). Basta questo — il workflow è già in
+`.github/workflows/deploy.yml`.
+
+**Perché funziona senza configurare il percorso.** `vite.config.ts` usa `base: './'`,
+quindi tutti gli asset finiscono con URL relativi: l'app gira identica su
+`utente.github.io/Relic/`, su un dominio custom o aperta da disco. Non c'è nessun nome
+di repository cablato nel codice — se rinomini il repo non si rompe niente.
+
+Dopo il primo deploy il gioco è a `https://<utente>.github.io/Relic/`, e la versione a
+file singolo resta a `https://<utente>.github.io/Relic/giocabile.html`.
+
+**Se la pagina esce bianca**, apri la console del browser: quasi sempre è `base`
+sbagliata, e si vede da richieste 404 su `/assets/...` invece che su `/Relic/assets/...`.
+
 ## Onboarding
 
 Il prototipo v0.1 non spiegava niente: un pulsante che non diceva di essere premuto e
@@ -114,6 +133,37 @@ leggero al più esplicito.
 
 I predicati delle quest sono funzioni pure su una vista piatta dello stato
 (`GameProgressView`) e ne viene valutato **uno solo per tick**, quello corrente.
+
+## Game feel
+
+Un clicker sta in piedi o cade sui primi sessanta secondi. La v0.1 ne chiedeva 48 di
+tocchi prima della prima ricompensa reale e rispondeva con un "+1" grigio da 12 px.
+
+**Economia.** Il pugnale richiede 8 punti di lavoro invece di 12 e ne rende 6 di essenza
+invece di 4; la prima Lente costa 10 invece di 15. Risultato misurato a ritmo realistico
+(~4 tocchi al secondo): **primo restauro al 4° tocco, primo potenziamento comprabile
+all'11°** — erano rispettivamente 12 e ~48.
+
+**Combo.** Tocchi entro 700 ms si concatenano fino a ×2.2 (`COMBO_*` in `balance.ts`).
+Non costa Polvere extra: è una ricompensa per il ritmo, non una tassa sulla velocità. Il
+moltiplicatore è grande e cambia colore da oro a rosso mentre sale.
+
+**Critici.** 9% di probabilità, ×5 danno, numero doppio con stella e bagliore.
+
+**Feedback per tocco.** Tre canali sempre insieme: numero volante che cresce con la
+combo, blip WebAudio il cui tono sale di un'ottava lungo la combo, vibrazione.
+Al restauro si aggiungono scossa dello schermo, quattordici particelle sprite a ventaglio
+e un arpeggio pentatonico.
+
+**Audio senza file.** `src/lib/audio.ts` sintetizza tutto con WebAudio: zero asset da
+scaricare, zero licenze, e il suono può reagire allo stato (cosa impossibile con un
+campione fisso). Il contesto si sblocca al primo `pointerdown` — i browser rifiutano di
+suonare prima. Interruttore muto nell'header, preferenza fuori dal salvataggio di gioco.
+
+**Niente notifiche per i restauri.** Restaurare produce un evento sotto il pollice del
+giocatore: annunciarlo con un toast significa coprire proprio la cosa che sta guardando.
+Il guadagno appare grande al centro dell'oggetto. I toast restano per ciò che accade
+fuori dal fuoco visivo — ricordi, obiettivi, Ispettore — e due uguali di fila si fondono.
 
 ## Mobile
 

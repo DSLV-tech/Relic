@@ -4,6 +4,13 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import {
   BASE_DUST_REGEN,
   BASE_TAP_POWER,
+  COMBO_DECAY_MS,
+  COMBO_MAX,
+  COMBO_STEP,
+  COMBO_WINDOW_MS,
+  CRIT_CHANCE,
+  CRIT_MULTIPLIER,
+  RESTORE_WORK_GROWTH,
   DUPLICATE_REFUND_BASE,
   DUST_CAP_BASE,
   DUST_CAP_PER_PRESTIGE,
@@ -34,6 +41,7 @@ import type {
   Rarity,
   RelicInstance,
   Resources,
+  TapOutcome,
   Toast,
   ToastKind,
   UpgradeLevels,
@@ -57,6 +65,10 @@ interface GameState {
   totalTaps: number;
   totalRestores: number;
   cratesOpened: number;
+  /** Anelli di combo correnti. Azzerati dal silenzio, non dal tempo assoluto. */
+  combo: number;
+  bestCombo: number;
+  lastTapAt: number;
   /** Il giocatore ha aperto almeno un ricordo dall'Archivio. */
   loreOpened: boolean;
   /** L'introduzione narrativa è già stata vista. */
@@ -72,7 +84,8 @@ interface GameState {
 
 interface GameActions {
   tick: (deltaMs: number) => void;
-  tap: () => void;
+  /** Restituisce l'esito così la UI può animare senza rileggere lo stato. */
+  tap: () => TapOutcome | null;
   selectRelic: (relicId: string) => void;
   buyUpgrade: (upgradeId: string, count?: number) => void;
   openCrate: (crateId: string) => CrateResult | null;
@@ -199,7 +212,15 @@ export const currentQuest = (state: GameState): Quest | undefined =>
  * Mantiene la coda corta. Al primo restauro possono scattare tre notifiche
  * insieme (oggetto, obiettivo, ricordo): su un telefono coprirebbero il banco.
  */
-const pushToast = (toasts: Toast[], toast: Toast): Toast[] => [...toasts, toast].slice(-3);
+const pushToast = (toasts: Toast[], toast: Toast): Toast[] => {
+  const last = toasts[toasts.length - 1];
+  // Eventi ripetuti (stesso titolo) si fondono invece di impilarsi: senza
+  // questo, restaurare in serie seppellisce lo schermo di notifiche identiche.
+  if (last && last.title === toast.title) {
+    return [...toasts.slice(0, -1), { ...toast, id: last.id }];
+  }
+  return [...toasts, toast].slice(-3);
+};
 
 // ─────────────────────────────────────────────────────────── Motore di simulazione
 
@@ -236,7 +257,7 @@ const applyWork = (
   let loreUnlocked: string | null = null;
 
   for (let guard = 0; guard < 512; guard += 1) {
-    const required = definition.baseWork * Math.pow(1.12, current.restoreCount);
+    const required = definition.baseWork * Math.pow(RESTORE_WORK_GROWTH, current.restoreCount);
     if (pool < required) break;
     pool -= required;
     restores += 1;
@@ -276,6 +297,9 @@ const createInitialState = (carryShards: number, prestigeCount: number): GameSta
   totalTaps: 0,
   totalRestores: 0,
   cratesOpened: 0,
+  combo: 0,
+  bestCombo: 0,
+  lastTapAt: 0,
   loreOpened: false,
   introSeen: false,
   completedQuests: [],
@@ -432,7 +456,12 @@ export const useGameStore = create<GameStore>()(
           toasts = pushToast(toasts, makeToast('success', 'Obiettivo completato', quest.title));
         }
 
+        // La combo si azzera col silenzio. Scrivere solo quando cambia evita
+        // di far ri-renderizzare il contatore dieci volte al secondo.
+        const comboExpired = state.combo > 0 && now - state.lastTapAt > COMBO_DECAY_MS;
+
         set({
+          ...(comboExpired ? { combo: 0 } : {}),
           resources: draft.resources,
           relics: draft.relics,
           inspector: draft.inspector,
@@ -451,39 +480,43 @@ export const useGameStore = create<GameStore>()(
         const state = get();
         const relic = state.relics[state.activeRelicId];
         const definition = relic ? RELICS_BY_ID[relic.definitionId] : undefined;
-        if (!relic || !definition) return;
-        if (state.resources.polvere < definition.dustPerTap) return;
+        if (!relic || !definition) return null;
+        if (state.resources.polvere < definition.dustPerTap) return null;
 
-        const outcome = applyWork(relic, state.derived.tapPower, state.derived.valueMultiplier);
+        const now = Date.now();
+
+        // Combo: tocchi ravvicinati si concatenano. Non costa Polvere in più —
+        // è una ricompensa per il ritmo, non una tassa sulla velocità.
+        const chained = now - state.lastTapAt <= COMBO_WINDOW_MS;
+        const combo = chained ? Math.min(state.combo + 1, COMBO_MAX) : 1;
+        const comboMultiplier = 1 + (combo - 1) * COMBO_STEP;
+
+        const crit = Math.random() < CRIT_CHANCE;
+        const critMultiplier = crit ? CRIT_MULTIPLIER : 1;
+
+        const work = state.derived.tapPower * comboMultiplier * critMultiplier;
+        const applied = applyWork(relic, work, state.derived.valueMultiplier);
+
         let toasts = state.toasts;
         let unlockedLore = state.unlockedLore;
 
-        if (outcome.loreUnlocked && !unlockedLore.includes(outcome.loreUnlocked)) {
-          unlockedLore = [...unlockedLore, outcome.loreUnlocked];
-          const fragment = LORE_BY_ID[outcome.loreUnlocked];
+        if (applied.loreUnlocked && !unlockedLore.includes(applied.loreUnlocked)) {
+          unlockedLore = [...unlockedLore, applied.loreUnlocked];
+          const fragment = LORE_BY_ID[applied.loreUnlocked];
           if (fragment) {
             toasts = pushToast(toasts, makeToast('lore', 'Nuovo ricordo', fragment.title));
           }
         }
-        if (outcome.restores > 0) {
-          toasts = pushToast(
-            toasts,
-            makeToast(
-              'success',
-              definition.restoredName,
-              `+${Math.round(outcome.essence)} essenza`,
-              definition.spriteRestored,
-            ),
-          );
-        }
-
-        // I tap manuali generano Pressione esattamente come l'automazione:
-        // altrimenti il giocatore attivo sfuggirebbe del tutto all'Ispettore.
+        // Anche i tap manuali generano Pressione: senza, il giocatore attivo
+        // sfuggirebbe del tutto all'Ispettore.
         const pressureGain =
-          outcome.essence * PRESSURE_PER_ESSENCE * (1 - state.derived.pressureDamping);
+          applied.essence * PRESSURE_PER_ESSENCE * (1 - state.derived.pressureDamping);
         const pressure = clamp(state.inspector.pressure + pressureGain, 0, 1);
 
         set({
+          combo,
+          bestCombo: Math.max(state.bestCombo, combo),
+          lastTapAt: now,
           inspector: {
             ...state.inspector,
             pressure,
@@ -492,17 +525,27 @@ export const useGameStore = create<GameStore>()(
           resources: {
             ...state.resources,
             polvere: state.resources.polvere - definition.dustPerTap,
-            essenza: state.resources.essenza + outcome.essence,
-            monete: state.resources.monete + outcome.coins,
+            essenza: state.resources.essenza + applied.essence,
+            monete: state.resources.monete + applied.coins,
           },
-          relics: { ...state.relics, [relic.definitionId]: outcome.relic },
+          relics: { ...state.relics, [relic.definitionId]: applied.relic },
           totalTaps: state.totalTaps + 1,
-          totalRestores: state.totalRestores + outcome.restores,
-          totalEssenceEarned: state.totalEssenceEarned + outcome.essence,
-          lifetimeEssence: state.lifetimeEssence + outcome.essence,
+          totalRestores: state.totalRestores + applied.restores,
+          totalEssenceEarned: state.totalEssenceEarned + applied.essence,
+          lifetimeEssence: state.lifetimeEssence + applied.essence,
           unlockedLore,
           toasts,
         });
+
+        return {
+          work,
+          crit,
+          combo,
+          comboMultiplier,
+          restored: applied.restores,
+          essence: applied.essence,
+          coins: applied.coins,
+        };
       },
 
       selectRelic: (relicId) => {

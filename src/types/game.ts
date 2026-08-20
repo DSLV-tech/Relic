@@ -192,6 +192,20 @@ export interface OfflineReport {
   readonly cappedByDust: boolean;
 }
 
+/** Esito di un singolo tocco, restituito dall'azione `tap` per alimentare gli effetti. */
+export interface TapOutcome {
+  /** Lavoro effettivamente applicato, moltiplicatori inclusi. */
+  readonly work: number;
+  readonly crit: boolean;
+  /** Anelli di combo dopo questo tocco. */
+  readonly combo: number;
+  readonly comboMultiplier: number;
+  /** Quante reliquie sono state completate da questo tocco. */
+  readonly restored: number;
+  readonly essence: number;
+  readonly coins: number;
+}
+
 // ─────────────────────────────────────────────────────────── Obiettivi
 
 /** Sezione dell'interfaccia da evidenziare mentre un obiettivo è attivo. */

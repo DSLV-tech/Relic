@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { HIDE_WINDOW_MS, PRESSURE_SUSPICION, PRESSURE_VISIT } from '../../data/balance';
 import { useHaptics } from '../../hooks/useHaptics';
+import { useSound } from '../../hooks/useSound';
 import { formatPercent } from '../../lib/format';
 import { useGameStore } from '../../store/gameStore';
 import { useInspector } from '../../store/selectors';
@@ -20,12 +21,16 @@ export const InspectorMeter = (): JSX.Element => {
   const hideArtifacts = useGameStore((state) => state.hideArtifacts);
   const [remaining, setRemaining] = useState(HIDE_WINDOW_MS);
   const haptic = useHaptics();
+  const play = useSound();
 
   // La visita è l'unico evento che può cogliere il giocatore fuori dallo schermo:
   // la vibrazione è il canale giusto per segnalarla.
   useEffect(() => {
-    if (inspector.hiding) haptic('alert');
-  }, [inspector.hiding, haptic]);
+    if (inspector.hiding) {
+      haptic('alert');
+      play('alert');
+    }
+  }, [inspector.hiding, haptic, play]);
 
   useEffect(() => {
     if (!inspector.hiding || inspector.nextVisitAt === null) return;

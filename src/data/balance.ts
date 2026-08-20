@@ -12,6 +12,24 @@ export const OFFLINE_CAP_MS = 8 * 60 * 60 * 1_000;
 export const OFFLINE_EFFICIENCY = 0.55;
 
 export const BASE_TAP_POWER = 1;
+
+/**
+ * Combo: tocchi entro questa finestra si concatenano. 700 ms è il ritmo di un
+ * pollice rilassato — chi martella arriva in cima, chi picchietta resta a metà.
+ */
+export const COMBO_WINDOW_MS = 700;
+/** Oltre questo silenzio la combo si azzera. */
+export const COMBO_DECAY_MS = 1_100;
+export const COMBO_MAX = 30;
+/** Bonus per anello di combo: a 30 il moltiplicatore è ×2.2. */
+export const COMBO_STEP = 0.04;
+
+/** Probabilità di colpo critico e suo moltiplicatore. */
+export const CRIT_CHANCE = 0.09;
+export const CRIT_MULTIPLIER = 5;
+
+/** Crescita del lavoro richiesto ad ogni restauro della stessa reliquia. */
+export const RESTORE_WORK_GROWTH = 1.09;
 export const BASE_DUST_REGEN = 1.5;
 export const DUST_CAP_BASE = 120;
 export const DUST_CAP_PER_PRESTIGE = 40;

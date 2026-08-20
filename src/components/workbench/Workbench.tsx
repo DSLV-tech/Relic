@@ -1,17 +1,22 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
+import { COMBO_MAX } from '../../data/balance';
 import { RARITIES } from '../../data/relics';
-import { formatNumber } from '../../lib/format';
 import { useHaptics } from '../../hooks/useHaptics';
+import { useSound } from '../../hooks/useSound';
+import { formatNumber } from '../../lib/format';
 import { useGameStore } from '../../store/gameStore';
 import { useActiveRelic, useDerived, useResource } from '../../store/selectors';
 import { Sprite } from '../ui/Sprite';
+import { BurstParticles, type Burst } from './BurstParticles';
+import { ComboMeter } from './ComboMeter';
 import { RestoreBar } from './RestoreBar';
 import { TapParticles, type Particle } from './TapParticles';
 
 /**
- * Il banco di lavoro: il 90% del tempo di gioco passa qui.
- * Ogni tap deve dare un feedback immediato — scala, particella, numero.
+ * Il banco di lavoro: qui passa il 90% del tempo di gioco, quindi qui va messo
+ * il 90% del "succo". Ogni tocco deve produrre almeno tre segnali diversi —
+ * visivo, sonoro, tattile — entro un frame.
  */
 export const Workbench = (): JSX.Element => {
   const { definition, instance, progress } = useActiveRelic();
@@ -19,10 +24,12 @@ export const Workbench = (): JSX.Element => {
   const polvere = useResource('polvere');
   const tap = useGameStore((state) => state.tap);
   const haptic = useHaptics();
+  const play = useSound();
 
   const [particles, setParticles] = useState<readonly Particle[]>([]);
+  const [bursts, setBursts] = useState<readonly Burst[]>([]);
   const [punch, setPunch] = useState(false);
-  // Se il giocatore sta fermo per qualche secondo, il banco torna a invitarlo.
+  const [shake, setShake] = useState(false);
   const [idle, setIdle] = useState(true);
   const seq = useRef(0);
   const idleTimer = useRef<number | null>(null);
@@ -34,38 +41,79 @@ export const Workbench = (): JSX.Element => {
     [],
   );
 
-  const canTap = definition !== undefined && polvere >= definition.dustPerTap;
-
   /**
    * `pointerdown` invece di `click`: su mobile il click arriva ~80 ms dopo il
    * rilascio, e in un clicker quel ritardo si sente come input lag.
    */
   const handleTap = useCallback(
     (event: React.PointerEvent<HTMLButtonElement>): void => {
-      if (!canTap || !definition) return;
-      tap();
-      haptic('tap');
+      if (!definition) return;
+      const outcome = tap();
+      if (!outcome) return;
 
       const rect = event.currentTarget.getBoundingClientRect();
-      const particle: Particle = {
-        id: seq.current++,
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
-        label: `+${formatNumber(derived.tapPower, 1)}`,
-      };
-      setParticles((prev) => [...prev.slice(-11), particle]);
+      const heat = Math.min(1, (outcome.combo - 1) / (COMBO_MAX - 1));
+
+      setParticles((prev) => [
+        ...prev.slice(-11),
+        {
+          id: seq.current++,
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+          label: `+${formatNumber(outcome.work, 1)}`,
+          crit: outcome.crit,
+          heat,
+        },
+      ]);
+
       setPunch(true);
       window.setTimeout(() => setPunch(false), 90);
+
+      if (outcome.crit) {
+        haptic('success');
+        play('crit');
+      } else {
+        haptic('tap');
+        play('tap', outcome.combo);
+      }
+
+      if (outcome.restored > 0) {
+        // Restauro completato: esplosione di monete, scossa e arpeggio.
+        setBursts((prev) => [
+          ...prev.slice(-2),
+          { id: seq.current++, sprite: 'particella_essenza', count: 14 },
+        ]);
+        // Il guadagno appare grande al centro dell'oggetto: nessuna notifica
+        // che copra proprio la cosa che il giocatore sta guardando.
+        setParticles((prev) => [
+          ...prev.slice(-11),
+          {
+            id: seq.current++,
+            x: rect.width / 2,
+            y: rect.height / 2 - 18,
+            label: `+${formatNumber(outcome.essence)} essenza`,
+            crit: false,
+            heat: 1,
+          },
+        ]);
+        setShake(true);
+        window.setTimeout(() => setShake(false), 380);
+        haptic('success');
+        play('restore');
+      }
 
       setIdle(false);
       if (idleTimer.current !== null) window.clearTimeout(idleTimer.current);
       idleTimer.current = window.setTimeout(() => setIdle(true), 2_600);
     },
-    [canTap, definition, derived.tapPower, haptic, tap],
+    [definition, haptic, play, tap],
   );
 
   const removeParticle = useCallback((id: number): void => {
     setParticles((prev) => prev.filter((particle) => particle.id !== id));
+  }, []);
+  const removeBurst = useCallback((id: number): void => {
+    setBursts((prev) => prev.filter((burst) => burst.id !== id));
   }, []);
 
   if (!definition || !instance) {
@@ -76,13 +124,16 @@ export const Workbench = (): JSX.Element => {
     );
   }
 
+  const canTap = polvere >= definition.dustPerTap;
   const rarity = RARITIES[definition.rarity];
-  // Il nome passa a "restaurato" appena l'oggetto è stato completato almeno una
-  // volta e si è ripartiti da capo; lo sprite invece dissolve con il progresso.
   const showRestoredName = instance.restoreCount > 0;
 
   return (
-    <section className="flex h-full flex-col items-center justify-center gap-3 sm:gap-5 sm:py-2">
+    <section
+      className={`flex h-full flex-col items-center justify-center gap-3 sm:gap-5 sm:py-2 ${
+        shake ? 'animate-shake' : ''
+      }`}
+    >
       <header className="text-center">
         <p className={`text-[11px] uppercase tracking-[0.2em] ${rarity.tone.split(' ')[0]}`}>
           {rarity.label}
@@ -94,6 +145,8 @@ export const Workbench = (): JSX.Element => {
           restaurata {instance.restoreCount}× · {definition.dustPerTap} polvere per tap
         </p>
       </header>
+
+      <ComboMeter />
 
       <button
         type="button"
@@ -107,7 +160,7 @@ export const Workbench = (): JSX.Element => {
           'border-stone-800 bg-gradient-to-b from-stone-900 to-stone-950',
           canTap ? 'cursor-pointer hover:border-amber-800/70' : 'cursor-not-allowed opacity-60',
           canTap && idle ? 'animate-invite border-amber-700/70' : '',
-          punch ? 'scale-[0.965]' : 'scale-100',
+          punch ? 'scale-[0.955]' : 'scale-100',
           rarity.glow,
         ].join(' ')}
       >
@@ -115,18 +168,22 @@ export const Workbench = (): JSX.Element => {
           <Sprite
             id={definition.spriteBroken}
             size={160}
-            className={punch ? 'brightness-125' : ''}
+            className={punch ? 'brightness-150' : ''}
           />
           {/* Lo stato restaurato affiora man mano che la barra si riempie. */}
           <Sprite
             id={definition.spriteRestored}
             size={160}
-            className={`pointer-events-none absolute inset-0 transition-opacity duration-150 ${punch ? 'brightness-125' : ''}`}
+            className={`pointer-events-none absolute inset-0 transition-opacity duration-150 ${
+              punch ? 'brightness-150' : ''
+            }`}
             style={{ opacity: progress }}
             aria-hidden
           />
         </div>
+
         <TapParticles particles={particles} onDone={removeParticle} />
+        <BurstParticles bursts={bursts} onDone={removeBurst} />
 
         {/* L'invito sparisce appena il giocatore capisce, e torna se si ferma. */}
         <span

@@ -166,6 +166,34 @@ Il principio: **nessun momento del gioco deve lasciare il giocatore senza una pr
 azione ovvia.** In un incremental questo vale doppio, perché non c'è una storia lineare
 che ti spinge avanti — solo una serie di scelte che devono sembrare tutte comprensibili.
 
+## 5-ter. Il game feel dei primi sessanta secondi
+
+Secondo test sul campo: *«continuo a fare click sul pugnale ma non accade quasi nulla»*.
+Due problemi distinti, mascherati da uno.
+
+**L'economia era troppo lenta.** Servivano 12 tocchi per il primo restauro e circa 48 per
+potersi permettere il primo potenziamento. In un clicker la prima ricompensa vera deve
+arrivare entro il primo mezzo minuto, altrimenti il giocatore non arriva mai a scoprire
+che esiste un ciclo. Ora: primo restauro al 4° tocco, prima Lente all'11°.
+
+**Il feedback era muto.** Un "+1" grigio di 12 px e una scala del 3.5%. Le tre leve che
+ho aggiunto, in ordine di impatto:
+
+- **La combo.** È la singola meccanica che trasforma il tapping da compito a gioco: dà
+  un obiettivo momento per momento («non spezzare la catena») dentro un'attività che
+  altrimenti è solo ripetizione. Sale a ×2.2, si azzera col silenzio, e il moltiplicatore
+  è mostrato grande sopra la reliquia — dove l'occhio è già.
+- **I critici.** Varianza. Un 9% di tocchi che valgono cinque volte tanto rende ogni
+  singolo tocco un piccolo lancio di dado invece di un incremento noto.
+- **L'audio.** Sintetizzato, quindi il tono del tap può salire con la combo. Sentire la
+  scala che sale mentre il numero cresce è metà della soddisfazione, e non costa un solo
+  byte di asset.
+
+E una sottrazione che conta quanto le aggiunte: **ho tolto le notifiche di restauro.**
+Coprivano la reliquia — tre "+6 essenza" identiche impilate sopra la cosa che il
+giocatore stava guardando. La regola che ne esce: *un toast serve per ciò che accade
+fuori dal fuoco visivo.* Quello che succede sotto il dito si mostra dove sta il dito.
+
 ## 6. Ritenzione: cosa c'è e cosa ho lasciato fuori di proposito
 
 La richiesta era «un gioco che non ti faccia staccare dal telefonino». Vale la pena

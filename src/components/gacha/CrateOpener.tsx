@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { CRATES } from '../../data/upgrades';
+import { useSound } from '../../hooks/useSound';
 import { RARITIES, RELICS_BY_ID } from '../../data/relics';
 import { formatNumber } from '../../lib/format';
 import { useGameStore } from '../../store/gameStore';
@@ -14,6 +15,7 @@ import { Sprite } from '../ui/Sprite';
  */
 export const CrateOpener = (): JSX.Element => {
   const [opening, setOpening] = useState(false);
+  const play = useSound();
 
   const { monete, frammenti, openCrate, lastCrateResult, clearCrateResult } = useGameStore(
     useShallow((state) => ({
@@ -28,12 +30,14 @@ export const CrateOpener = (): JSX.Element => {
   const handleOpen = useCallback(
     (crateId: string) => {
       setOpening(true);
+      play('purchase');
       window.setTimeout(() => {
-        openCrate(crateId);
+        const result = openCrate(crateId);
         setOpening(false);
+        play(result && !result.duplicate ? 'prestige' : 'restore');
       }, 900);
     },
-    [openCrate],
+    [openCrate, play],
   );
 
   const result = lastCrateResult;

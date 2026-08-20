@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { PRESTIGE_THRESHOLD } from '../../data/balance';
+import { useSound } from '../../hooks/useSound';
 import { formatNumber, formatPercent } from '../../lib/format';
 import { prestigeMultiplier } from '../../lib/math';
 import { useGameStore } from '../../store/gameStore';
@@ -14,6 +15,7 @@ export const PrestigePanel = (): JSX.Element => {
   const derived = useDerived();
   const shards = useResource('frammenti');
   const prestige = useGameStore((state) => state.prestige);
+  const play = useSound();
 
   const ready = preview.available > 0;
   const progress = Math.min(1, preview.lifetime / PRESTIGE_THRESHOLD);
@@ -85,6 +87,7 @@ export const PrestigePanel = (): JSX.Element => {
               type="button"
               onClick={() => {
                 prestige();
+                play('prestige');
                 setConfirming(false);
               }}
               className="flex-1 rounded border border-violet-500 bg-violet-600/25 px-4 py-2 text-sm font-semibold text-violet-100 transition hover:bg-violet-600/45"
