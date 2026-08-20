@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-stone-950 font-sans antialiased;
+    /* La pixel art non deve mai essere interpolata, nemmeno dai background. */
+    image-rendering: pixelated;
+    /* Su mobile: niente flash blu al tocco, niente rimbalzo elastico che
+       sembra un bug quando si martella il pulsante di tap. */
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+    touch-action: manipulation;
+  }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Scrollbar coerente col tema scuro della bottega. */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-stone-900;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded bg-stone-700;
+  }
+}
+
+@layer utilities {
+  .animate-float-up {
+    animation: float-up 700ms ease-out forwards;
+  }
+  .animate-slide-in {
+    animation: slide-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .animate-invite {
+    animation: invite 2.2s ease-in-out infinite;
+  }
+  .animate-quest-ring {
+    animation: quest-ring 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -56px) scale(1.25);
+  }
+}
+
+@keyframes invite {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.13);
+  }
+}
+
+@keyframes quest-ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(45, 212, 191, 0);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

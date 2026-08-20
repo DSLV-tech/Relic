@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Icona in data URI: funziona anche nella build a file singolo, dove
+         /public non esiste. -->
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAEiElEQVR4nO2dPWgUURSFR7Gx2SqoxE5SbCUIFrK1hcVikcoiiJUQC7GwDDJISotUCiklhVUKSWFhHbYIEaxShHQGE1JtY6n1OwvvernvzezuOV+3zOzs2+Fwz333/TWNEEIIIRi51ncDarO6svo38v3zq/OlfkfX+26A6BcJgBwJgJwbfTegNOj5B+1acv3rs8/J56dfnmefN26b5HnLlhMoApAjAZAjAZCz8H5mef64PQ0933reoucEigDkSADkSADkhOsA6MHz7olW+6JjB4uGIgA5EgA5EgA57hwAPfLlyWFyfXc4qpoTRD26tMcvWg6EKAKQIwGQIwGQE/Yr9MBfp3vJ9btrG8nnaD8cc455Y3c4yl6P5gilcw5FAHIkAHIkAHKK91m9HmXVFRDLYxEcz/finU/gbX/0/XifhygCkCMBkCMBkFO9bu3t11sevzUexBtVke2Dafa69/+ip5euuygCkCMBkCMBkFO9DhDt11ue/+jhrf9sWR0mR5fZ696cALH6+dGxAUUAciQAciQAcjrfHwA9Lerxw9H9UHtu3ltPPv8523c+4Wf26pbx7W14H975DpoPIEJIAORIAOQUnxNo1bq9nh/1+L45OUxzBG/doPT4P6IIQI4EQI4EQE6NtYGu50U9f7ryynV/aQZXH7PXZ/+PLyfA91l6LaYiADkSADkSADnVxwKw3+/1fKzVX0zvZO+/PfjtaF3TfHqT5hCbO3lPx9/HHARzAmz/cOaJaU6AYwfWfIIoigDkSADkSADkmDlA6Vq/F/Rcr8dboMdu7uTvt37/ooG6xFk+p7DA92nNH/DWBRQByJEAyJEAyKleB/D2+721fW8/vjT4++vv0zmFVp0gOlYQRRGAHAmAHAmAnLk/N9Dqd3ft+fbvp+21xi76RhGAHAmAHAmAnLnPAYQP79iAIgA5EgA5EgA5ygGWDO/aQUUAciQAciQAcjrPAbx78tQe76+99/D+u/T/vnj9OHv/g402+Tw5qrv2URGAHAmAHAmAnM5zAO8+fLXH+/H5uN8+7sfvBecINsZ+Aj/22tDveVEEIEcCIEcCIEdjAYB1Bo91/6KhCECOBECOBEDO3OcAtfcHsLA8HnOE4+PvNZtTHEUAciQAciQAcqrnALPr29P177g+HtfPW/sF9L0/gDWfwNpL2HueQGkUAciRAMiRAMhxnzcT3Tew9vkAtesE1np/y/MRKweofYaQIgA5EgA5EgA51esAlx++JZ8nb5/AHfm6AK4jwL13MSfw7smD8/Zn5vAZWJ6P7cc5f7gOYNzm5x+URhGAHAmAHAmAnM7PDsbxdazls58djDkTorODRVEkAHIkAHLCOQBS+owhzAmQvnME9HjE8vzatX4LRQByJAByJAByOl8XgB6H5+AheJbuLHkPtsBavHd9vtfjEXwfXaMIQI4EQI4EQE7xOgCCdQHE6vcitff1i+L1fOv/lu73I4oA5EgA5EgA5FTPASyssQPE8sy+8ba/tsdbKAKQIwGQIwGQ03sOgHjrBvNG3/16L4oA5EgA5EgA5PwDgFu30TjLAJkAAAAASUVORK5CYII=" />
+    <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAEiElEQVR4nO2dPWgUURSFR7Gx2SqoxE5SbCUIFrK1hcVikcoiiJUQC7GwDDJISotUCiklhVUKSWFhHbYIEaxShHQGE1JtY6n1OwvvernvzezuOV+3zOzs2+Fwz333/TWNEEIIIRi51ncDarO6svo38v3zq/OlfkfX+26A6BcJgBwJgJwbfTegNOj5B+1acv3rs8/J56dfnmefN26b5HnLlhMoApAjAZAjAZCz8H5mef64PQ0933reoucEigDkSADkSADkhOsA6MHz7olW+6JjB4uGIgA5EgA5EgA57hwAPfLlyWFyfXc4qpoTRD26tMcvWg6EKAKQIwGQIwGQE/Yr9MBfp3vJ9btrG8nnaD8cc455Y3c4yl6P5gilcw5FAHIkAHIkAHKK91m9HmXVFRDLYxEcz/finU/gbX/0/XifhygCkCMBkCMBkFO9bu3t11sevzUexBtVke2Dafa69/+ip5euuygCkCMBkCMBkFO9DhDt11ue/+jhrf9sWR0mR5fZ696cALH6+dGxAUUAciQAciQAcjrfHwA9Lerxw9H9UHtu3ltPPv8523c+4Wf26pbx7W14H975DpoPIEJIAORIAOQUnxNo1bq9nh/1+L45OUxzBG/doPT4P6IIQI4EQI4EQE6NtYGu50U9f7ryynV/aQZXH7PXZ/+PLyfA91l6LaYiADkSADkSADnVxwKw3+/1fKzVX0zvZO+/PfjtaF3TfHqT5hCbO3lPx9/HHARzAmz/cOaJaU6AYwfWfIIoigDkSADkSADkmDlA6Vq/F/Rcr8dboMdu7uTvt37/ooG6xFk+p7DA92nNH/DWBRQByJEAyJEAyKleB/D2+721fW8/vjT4++vv0zmFVp0gOlYQRRGAHAmAHAmAnLk/N9Dqd3ft+fbvp+21xi76RhGAHAmAHAmAnLnPAYQP79iAIgA5EgA5EgA5ygGWDO/aQUUAciQAciQAcjrPAbx78tQe76+99/D+u/T/vnj9OHv/g402+Tw5qrv2URGAHAmAHAmAnM5zAO8+fLXH+/H5uN8+7sfvBecINsZ+Aj/22tDveVEEIEcCIEcCIEdjAYB1Bo91/6KhCECOBECOBEDO3OcAtfcHsLA8HnOE4+PvNZtTHEUAciQAciQAcqrnALPr29P177g+HtfPW/sF9L0/gDWfwNpL2HueQGkUAciRAMiRAMhxnzcT3Tew9vkAtesE1np/y/MRKweofYaQIgA5EgA5EgA51esAlx++JZ8nb5/AHfm6AK4jwL13MSfw7smD8/Zn5vAZWJ6P7cc5f7gOYNzm5x+URhGAHAmAHAmAnM7PDsbxdazls58djDkTorODRVEkAHIkAHLCOQBS+owhzAmQvnME9HjE8vzatX4LRQByJAByJAByOl8XgB6H5+AheJbuLHkPtsBavHd9vtfjEXwfXaMIQI4EQI4EQE7xOgCCdQHE6vcitff1i+L1fOv/lu73I4oA5EgA5EgA5FTPASyssQPE8sy+8ba/tsdbKAKQIwGQIwGQ03sOgHjrBvNG3/16L4oA5EgA5EgA5PwDgFu30TjLAJkAAAAASUVORK5CYII=" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#0c0a09" />
+    <title>Relic Loop — La Bottega del Tempo</title>
+    <meta
+      name="description"
+      content="Idle/clicker narrativo: restaura reliquie, ripara le fratture temporali e sfuggi all'Ordine dei Silenti."
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
